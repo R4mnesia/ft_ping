@@ -72,7 +72,7 @@ struct icmphdr
 
 */
 
-#define ICMP
+#define SL 1000000
 
 typedef struct s_header {
 

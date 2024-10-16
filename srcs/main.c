@@ -42,7 +42,6 @@ int ParseArg(int argc, char **argv, t_ping *dest) {
         dest->verbose = 1;
         hostname = argv[1];
     }
-    printf("hostname = %s\n", hostname);
     if (hostname) {
         dest->hostname = resolve_hostname(hostname, (struct sockaddr_in *)&dest->addr);
         dest->sock = 0;
@@ -54,33 +53,44 @@ int ParseArg(int argc, char **argv, t_ping *dest) {
     return (0);
 }
 
-void    sendPing(t_ping *dest) {
+void    sendPing(t_ping *dest, char *arg) {
 
-    //unsigned int seq = 0;
+    unsigned int seq = 0;
+    unsigned int ttl = 64;
+    char    buffer[128] = {0};
+    struct sockaddr_in      d_addr;
     t_header header;
     socklen_t socklen;
 
+    memset(header.rest, 0, (64 - sizeof(struct icmphdr)));
     header.icmp.type = ICMP_ECHO; // 8
     header.icmp.code = 0;
     header.icmp.checksum = 0; // function for check
     header.icmp.un.echo.sequence = 0; // number of request
     header.icmp.un.echo.id = 2; // getpid() ??
 
-    dest->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_ICMP); // IPPROTO_ICMP (specifie au noyau d'utiliser ICMP)
+    dest->sock = socket(dest->addr.sin_family, SOCK_DGRAM, IPPROTO_ICMP); // IPPROTO_ICMP (specifie au noyau d'utiliser ICMP)
     if (dest->sock == -1) {
         printf("Error: FD\n");
         return ;
     }
-    printf("sock = %d\n", dest->sock);
-    if (sendto(dest->sock, &header, sizeof(header), 0, (struct sockaddr *)&dest->addr, sizeof(dest->addr)) == -1) {
-        printf("Error: send message\n");
+    if (setsockopt(dest->sock, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1) { // set socket for ttl
+        printf("Error: Socket TTL\n");
         return ;
     }
-
-    socklen = sizeof(dest->addr);
-    if (recvfrom(dest->sock, &header, sizeof(header), 0, (struct sockaddr *)&dest->addr, &socklen) == -1) {
-        printf("Error: receive message\n");
-        return ;
+    while (1) {
+        if (sendto(dest->sock, &header, sizeof(header), 0, (struct sockaddr *)&dest->addr, sizeof(dest->addr)) == -1) {
+            printf("Error: send message\n");
+            return ;
+        }
+        usleep(SL);
+        socklen = sizeof(d_addr);
+        if (recvfrom(dest->sock, &buffer, sizeof(buffer), 0, (struct sockaddr *)&d_addr, &socklen) == -1) {
+            printf("Error: receive message\n");
+            return ;
+        }
+        printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=time\n", sizeof(header), arg, dest->hostname, seq, ttl);
+        seq++;
     }
     /* 64 bytes from par10s39-in-f14.1e100.net (216.58.214.78): icmp_seq=1 ttl=117 time=28.7 ms  */
     /* size packet, hostname, IP, count_seq,  */
@@ -103,7 +113,7 @@ int main(int argc, char **argv) {
         freeDest(dest);
         return (1);
     }
-    sendPing(&dest);
+    sendPing(&dest, argv[1]);
     freeDest(dest);
     return (0);
 }
