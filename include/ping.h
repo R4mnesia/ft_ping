@@ -21,11 +21,65 @@
 #include <sys/types.h>
 #include <net/if.h>
 
-#define DEFAULT_PACKET_SIZE 64
-#define DEFAULT_COUNT_PACKET 4
-#define DEFAULT_INTERVAL_PACKET 1
-#define DEFAULT_TIMEOUT 1
-#define DEFAULT_TTL 64
+//#define DEFAULT_PACKET_SIZE 64
+//#define DEFAULT_COUNT_PACKET 4
+//#define DEFAULT_INTERVAL_PACKET 1
+//#define DEFAULT_TIMEOUT 1
+//#define DEFAULT_TTL 64
+
+
+/*
+struct sockaddr_in {
+    sa_family_t    sin_family;  famille d'adresses : AF_INET     
+    uint16_t       sin_port;    port dans l'ordre d'octets réseau 
+    struct in_addr sin_addr;    adresse Internet                  
+};
+*/
+
+/*
+
+    Type 0 – Echo reply
+    Type 3 – Destination unreachable
+    Type 5 – Redirect Message
+    Type 8 – Echo Request
+    Type 11 – Time Exceeded
+    Type 12 – Parameter problem
+
+*/
+
+/*
+
+struct icmphdr
+{
+  u_int8_t type;                / message type 
+  u_int8_t code;                / type sub-code
+  u_int16_t checksum;
+  union
+  {
+    struct
+    {
+      u_int16_t        id;
+      u_int16_t        sequence;   / count 
+    } echo;                        / echo datagram 
+    u_int32_t        gateway;        / gateway address
+    struct
+    {
+      u_int16_t        __unused;
+      u_int16_t        mtu;
+    } frag;                        / path mtu discovery 
+  } un;
+};
+
+*/
+
+#define ICMP
+
+typedef struct s_header {
+
+    struct icmphdr icmp;
+    char    rest[64 - sizeof(struct icmphdr)]; // rest header
+
+}              t_header;
 
 typedef struct s_ping {
 
