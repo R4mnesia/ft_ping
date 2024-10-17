@@ -20,6 +20,7 @@
 #include <ifaddrs.h>
 #include <sys/types.h>
 #include <net/if.h>
+#include <time.h>
 
 //#define DEFAULT_PACKET_SIZE 64
 //#define DEFAULT_COUNT_PACKET 4
@@ -72,6 +73,8 @@ struct icmphdr
 
 */
 
+extern int sig;
+
 #define SL 1000000
 
 typedef struct s_header {
@@ -92,6 +95,14 @@ typedef struct s_ping {
 
 
 // Utils
-void freeDest(t_ping dest);
+void freeDest(t_ping *dest);
+void CTRLC(char *arg, int seq, float ms);
+int ParseArg(int argc, char **argv, t_ping *dest);
+void ERROR(int n, int sock, char *host);
+
+// main
+void  resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in *addr_dest);
+
+
 
 #endif
