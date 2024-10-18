@@ -4,29 +4,27 @@ int globalVariable = 0;
 
 float timedifference_msec(struct timeval t0, struct timeval t1)
 {
-    return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
+    return (t1.tv_sec - t0.tv_sec) * 1000.00f + (t1.tv_usec - t0.tv_usec) / 1000.00f;
 }
 
 void    resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in *addr_dest) {
     
-    struct addrinfo hints, *res;
-    (void)hints;
+    struct hostent   *host;
     
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET; // IPv4
-    hints.ai_socktype = SOCK_DGRAM;
-
-    if (getaddrinfo(hostname, NULL, &hints, &res) != 0) {
-        printf("ERROR\n");
+    host = gethostbyname(hostname);
+    if (!host)
         return ;
-    }
 
-    dest->hostname = strdup(inet_ntoa(*(struct in_addr *)res->ai_addr)); // binary IP to strings IP
-    (*addr_dest).sin_family = res->ai_family; // AF_INET (ipv4)
+    /*
+        struct in_addr {
+        unsigned long s_addr;  // load with inet_aton()
+        };
+    */
+
+    dest->hostname = strdup(inet_ntoa(*(struct in_addr *)host->h_addr)); // binary IP to strings IP
+    (*addr_dest).sin_family = host->h_addrtype; // AF_INET (ipv4)
     (*addr_dest).sin_port = 0;
-    (*addr_dest).sin_addr.s_addr = res->ai_flags;
-
-    freeaddrinfo(res);
+    (*addr_dest).sin_addr.s_addr = *(long *)host->h_addr;
 }
 
 void    sendPingNoVerbose(t_ping *dest, char *arg) {
@@ -41,13 +39,12 @@ void    sendPingNoVerbose(t_ping *dest, char *arg) {
     float diff = 0;
 
     memset(header.rest, 0, (64 - sizeof(struct icmphdr)));
-    //bzero(&icmp, sizeof(icmp));
     header.icmp.type = ICMP_ECHO; // 8
     header.icmp.code = 0;
     header.icmp.checksum = 0; // function for check
     header.icmp.un.echo.sequence = 0; // number of request
     header.icmp.un.echo.id = 2; // getpid() ??
-    printf("%d\n", dest->addr.sin_family);
+
     dest->sock = socket(dest->addr.sin_family, SOCK_DGRAM, IPPROTO_ICMP); // IPPROTO_ICMP (specifie au noyau d'utiliser ICMP)
     if (dest->sock == -1)
         ERROR(1, dest->sock, dest->hostname);
@@ -55,26 +52,28 @@ void    sendPingNoVerbose(t_ping *dest, char *arg) {
         ERROR(2, dest->sock, dest->hostname);
 
     while (1) {
-
         CTRLC(arg, seq, diff);
         gettimeofday(&start, NULL);
 
         if (sendto(dest->sock, &header, sizeof(header), 0, (struct sockaddr *)&dest->addr, sizeof(dest->addr)) == -1)
             ERROR(3, dest->sock, dest->hostname);
 
-        usleep(SL);
         socklen = sizeof(d_addr);
 
         if (recvfrom(dest->sock, &icmp, sizeof(icmp), 0, (struct sockaddr *)&d_addr, &socklen) == -1)
             ERROR(4, dest->sock, dest->hostname);
-
-        if (icmp.type == ICMP_ECHOREPLY) {
-            gettimeofday(&stop, NULL);
-            diff = timedifference_msec(start, stop);
-            printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=%f\n", sizeof(header), arg, dest->hostname, seq, ttl, diff);
+        
+        if (!sig) // sig = 0 = no CTRLC 
+        { 
+            if (icmp.type == ICMP_ECHOREPLY) {
+                gettimeofday(&stop, NULL);
+                diff = timedifference_msec(start, stop);
+                printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=%f\n", sizeof(header), arg, dest->hostname, seq, ttl, diff);
+            }
+            else
+                ERROR(5, dest->sock, dest->hostname);
         }
-        else
-            ERROR(5, dest->sock, dest->hostname);
+        usleep(SL);
         seq++;
     }
 
