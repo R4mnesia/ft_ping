@@ -6,12 +6,24 @@ void freeDest(t_ping *dest) {
     free(dest->hostname);
 }
 
+//float calc_min
+
 // mettre static qui passe 0 ou 1 pour print, pas avec le signal
-void CTRLC(char *arg, int seq, float ms) {
-    if (sig == 1) {
+void Quit_ProgramSIGINT(char *arg, int seq, float ms, int packet_sent, int packet_received, t_time *time) {
+    if (sig == CTRLC) {
         printf("\n--- %s ping statistics ---\n", arg);
         printf("%d packets transmitted, %d received, 0%% packet loss, time %fms\n", seq, seq, ms);
         exit(0);
+    }
+    else if (sig == CTRLQUIT) {
+        // 3/3 packets, 0% loss, min/avg/ewma/max = 17.580/17.656/17.674/17.704 ms
+        float packet_loss = (float)((packet_sent - packet_received) / packet_sent) * 100;
+        //float min = calc_min(time);
+        //float max = calc_max(time)
+        printf("%d/%d packets, %f loss, min,avg,ewma,max =  %.3fms\n", packet_received, packet_sent, packet_loss, time[0].time);
+
+        usleep(SL);
+        sig = 0;
     }
 }
 

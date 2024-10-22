@@ -62,20 +62,34 @@ struct icmphdr
       u_int16_t        id;
       u_int16_t        sequence;   / count 
     } echo;                        / echo datagram 
+
     u_int32_t        gateway;        / gateway address
     struct
     {
       u_int16_t        __unused;
       u_int16_t        mtu;
     } frag;                        / path mtu discovery 
+    
   } un;
+
 };
 
 */
 
+/*struct icmp_hdr {
+    uint8_t type;
+    uint8_t code;
+    uint16_t checksum;
+    uint16_t id;
+    uint16_t sequence;
+};*/
+
 extern int sig;
 
 #define SL 1000000
+#define NO_SIGNAL 0
+#define CTRLC 1
+#define CTRLQUIT 2
 
 typedef struct s_header {
 
@@ -93,10 +107,15 @@ typedef struct s_ping {
 
 }               t_ping;
 
+typedef struct s_time {
+
+    float time;
+
+}              t_time;
 
 // Utils
 void freeDest(t_ping *dest);
-void CTRLC(char *arg, int seq, float ms);
+void Quit_ProgramSIGINT(char *arg, int seq, float ms,  int packet_sent, int packet_received,  t_time *time);
 int ParseArg(int argc, char **argv, t_ping *dest);
 void ERROR(int n, int sock, char *host);
 

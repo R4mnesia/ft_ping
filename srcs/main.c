@@ -37,6 +37,8 @@ void    sendPingNoVerbose(t_ping *dest, char *arg) {
     socklen_t socklen;
     struct timeval stop, start;
     float diff = 0;
+    int packet_sent = 0, packet_received = 0;
+    t_time  *all_time = calloc(sizeof(t_time), 1); 
 
     memset(header.rest, 0, (64 - sizeof(struct icmphdr)));
     header.icmp.type = ICMP_ECHO; // 8
@@ -46,32 +48,40 @@ void    sendPingNoVerbose(t_ping *dest, char *arg) {
     header.icmp.un.echo.id = 2; // getpid() ??
 
     dest->sock = socket(dest->addr.sin_family, SOCK_DGRAM, IPPROTO_ICMP); // IPPROTO_ICMP (specifie au noyau d'utiliser ICMP)
+    
     if (dest->sock == -1)
         ERROR(1, dest->sock, dest->hostname);
     if (setsockopt(dest->sock, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1) // set socket for ttl
         ERROR(2, dest->sock, dest->hostname);
 
+
     while (1) {
-        CTRLC(arg, seq, diff);
+        //sig = 0;
+
+        Quit_ProgramSIGINT(arg, seq, diff, packet_sent, packet_received, all_time);
         gettimeofday(&start, NULL);
 
         if (sendto(dest->sock, &header, sizeof(header), 0, (struct sockaddr *)&dest->addr, sizeof(dest->addr)) == -1)
             ERROR(3, dest->sock, dest->hostname);
-
+        
+        packet_sent++;
+        
         socklen = sizeof(d_addr);
 
         if (recvfrom(dest->sock, &icmp, sizeof(icmp), 0, (struct sockaddr *)&d_addr, &socklen) == -1)
             ERROR(4, dest->sock, dest->hostname);
         
-        if (!sig) // sig = 0 = no CTRLC 
+        if (sig == NO_SIGNAL) //|| sig == CTRLQUIT) // sig = 0 = no CTRLC 
         { 
             if (icmp.type == ICMP_ECHOREPLY) {
                 gettimeofday(&stop, NULL);
                 diff = timedifference_msec(start, stop);
-                printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=%f\n", sizeof(header), arg, dest->hostname, seq, ttl, diff);
+                printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=%.1f\n", sizeof(header), arg, dest->hostname, seq, ttl, diff);
+                packet_received++;
             }
             else
                 ERROR(5, dest->sock, dest->hostname);
+            all_time[seq].time = diff;
         }
         usleep(SL);
         seq++;
@@ -81,10 +91,13 @@ void    sendPingNoVerbose(t_ping *dest, char *arg) {
     printf("OK");
 
 }
-void sigint_handler(int signal)
-{
+
+void sigint_handler(int signal) {
     if (signal == SIGINT) {
-        sig = 1;
+        sig = CTRLC; // 1
+    }
+    else if (signal == SIGQUIT) {
+        sig = CTRLQUIT; // 2
     }
 }
 
@@ -100,6 +113,7 @@ int main(int argc, char **argv) {
 
     act.sa_handler = &sigint_handler;
     sigaction(SIGINT, &act, NULL);
+    sigaction(SIGQUIT, &act, NULL);
     t_ping  dest;
     if (!ParseArg(argc, argv, &dest)) {
         printf("Error arguments\n");
