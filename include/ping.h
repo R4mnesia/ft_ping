@@ -115,7 +115,7 @@ typedef struct s_time {
 
 // Utils
 void freeDest(t_ping *dest);
-void Quit_ProgramSIGINT(char *arg, int seq, float ms,  int packet_sent, int packet_received,  t_time *time);
+void Quit_ProgramSIGINT(char *arg, int seq, float ms,  int packet_sent, int packet_received,  t_time *time, int time_all);
 int ParseArg(int argc, char **argv, t_ping *dest);
 void ERROR(int n, int sock, char *host);
 

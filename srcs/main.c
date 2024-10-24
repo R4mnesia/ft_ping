@@ -27,25 +27,42 @@ void    resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in 
     (*addr_dest).sin_addr.s_addr = *(long *)host->h_addr;
 }
 
+unsigned short checksum(void *b, int len) {
+
+    unsigned short *buf = b;
+    unsigned int sum = 0;
+    unsigned short result;
+
+    for (sum = 0; len > 1; len -= 2)
+        sum += *buf++;
+    if (len == 1)
+        sum += *(unsigned char *)buf;
+    sum = (sum >> 16) + (sum & 0xFFFF);
+    sum += (sum >> 16);
+    result = ~sum;
+    return result;
+}
+
+
 void    sendPingNoVerbose(t_ping *dest, char *arg) {
 
-    unsigned int seq = 0;
-    unsigned int ttl = 64;
     struct sockaddr_in      d_addr;
     struct icmphdr          icmp;
-    t_header header;
-    socklen_t socklen;
-    struct timeval stop, start;
+    struct timeval stop, start, start_all, stop_all;
     float diff = 0;
-    int packet_sent = 0, packet_received = 0;
+    unsigned int seq = 0, ttl = 64;
+    int packet_sent = 0, packet_received = 0, time_sigint = 0;
+    t_header header;
     t_time  *all_time = calloc(sizeof(t_time), 1); 
+    socklen_t socklen;
 
     memset(header.rest, 0, (64 - sizeof(struct icmphdr)));
     header.icmp.type = ICMP_ECHO; // 8
     header.icmp.code = 0;
-    header.icmp.checksum = 0; // function for check
+    header.icmp.checksum = 0;
+    header.icmp.checksum = checksum(&header.icmp, sizeof(header.icmp)); // function for check
     header.icmp.un.echo.sequence = 0; // number of request
-    header.icmp.un.echo.id = 2; // getpid() ??
+    header.icmp.un.echo.id = getpid(); // getpid() ??
 
     dest->sock = socket(dest->addr.sin_family, SOCK_DGRAM, IPPROTO_ICMP); // IPPROTO_ICMP (specifie au noyau d'utiliser ICMP)
     
@@ -53,17 +70,16 @@ void    sendPingNoVerbose(t_ping *dest, char *arg) {
         ERROR(1, dest->sock, dest->hostname);
     if (setsockopt(dest->sock, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1) // set socket for ttl
         ERROR(2, dest->sock, dest->hostname);
-
-
+    gettimeofday(&start_all, NULL);
     while (1) {
-        //sig = 0;
-
-        Quit_ProgramSIGINT(arg, seq, diff, packet_sent, packet_received, all_time);
+        header.icmp.checksum = checksum(&header.icmp, sizeof(header.icmp));
+        gettimeofday(&stop_all, NULL);
+        time_sigint = timedifference_msec(start_all, stop);
+        Quit_ProgramSIGINT(arg, seq, diff, packet_sent, packet_received, all_time, time_sigint);
         gettimeofday(&start, NULL);
 
         if (sendto(dest->sock, &header, sizeof(header), 0, (struct sockaddr *)&dest->addr, sizeof(dest->addr)) == -1)
             ERROR(3, dest->sock, dest->hostname);
-        
         packet_sent++;
         
         socklen = sizeof(d_addr);
@@ -85,11 +101,10 @@ void    sendPingNoVerbose(t_ping *dest, char *arg) {
         }
         usleep(SL);
         seq++;
+        header.icmp.un.echo.sequence = seq;
     }
 
     close(dest->sock);
-    printf("OK");
-
 }
 
 void sigint_handler(int signal) {
