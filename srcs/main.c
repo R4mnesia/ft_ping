@@ -43,65 +43,82 @@ unsigned short checksum(void *b, int len) {
     return result;
 }
 
+void    set_header_icmp(t_header *header) {
 
-void    sendPingNoVerbose(t_ping *dest, char *arg) {
+    memset(&header->icmp, 0, sizeof(struct icmphdr));
+    memset(header->rest, 0, (64 - sizeof(struct icmphdr)));
+    header->icmp.type = ICMP_ECHO; // 8
+    header->icmp.code = 0;
+    header->icmp.checksum = 0;
+    header->icmp.checksum = checksum(&header->icmp, sizeof(header->icmp)); // function for check
+    header->icmp.un.echo.sequence = 0; // number of request
+    header->icmp.un.echo.id = getpid(); // getpid() ?? 
+}
+
+void    set_struct_time(t_time *time) {
+
+    time->packet_received = 0;
+    time->packet_time_diff = 0;
+    time->packet_sent = 0;
+    time->all_time = 0;
+    time->seq = 0;
+}
+
+void    sendPing(t_ping *dest, char *arg) {
 
     struct sockaddr_in      d_addr;
     struct icmphdr          icmp;
     struct timeval stop, start, start_all, stop_all;
-    float diff = 0;
-    unsigned int seq = 0, ttl = 64;
-    int packet_sent = 0, packet_received = 0, time_sigint = 0;
+    unsigned int ttl = 64;
     t_header header;
-    t_time  *all_time = calloc(sizeof(t_time), 1); 
+    t_time  time;
     socklen_t socklen;
 
-    memset(header.rest, 0, (64 - sizeof(struct icmphdr)));
-    header.icmp.type = ICMP_ECHO; // 8
-    header.icmp.code = 0;
-    header.icmp.checksum = 0;
-    header.icmp.checksum = checksum(&header.icmp, sizeof(header.icmp)); // function for check
-    header.icmp.un.echo.sequence = 0; // number of request
-    header.icmp.un.echo.id = getpid(); // getpid() ??
+    set_header_icmp(&header);
+    set_struct_time(&time);
 
     dest->sock = socket(dest->addr.sin_family, SOCK_DGRAM, IPPROTO_ICMP); // IPPROTO_ICMP (specifie au noyau d'utiliser ICMP)
     
     if (dest->sock == -1)
-        ERROR(1, dest->sock, dest->hostname);
+        Error_exit(ERROR_FD, dest->sock, dest->hostname);
     if (setsockopt(dest->sock, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1) // set socket for ttl
-        ERROR(2, dest->sock, dest->hostname);
+        Error_exit(ERROR_SOCKET, dest->sock, dest->hostname);
     gettimeofday(&start_all, NULL);
+
+
+    printf("%ld\n", sizeof(d_addr));
+    printf("PING %s (%s) %ld(%ld) bytes of data.\n", arg, dest->hostname, 64 - sizeof(struct icmphdr), 56 + sizeof(struct icmphdr) + 20);
     while (1) {
         header.icmp.checksum = checksum(&header.icmp, sizeof(header.icmp));
         gettimeofday(&stop_all, NULL);
-        time_sigint = timedifference_msec(start_all, stop);
-        Quit_ProgramSIGINT(arg, seq, diff, packet_sent, packet_received, all_time, time_sigint);
+        time.all_time = timedifference_msec(start_all, stop);
+        Quit_ProgramSIGINT(arg, time);
         gettimeofday(&start, NULL);
 
         if (sendto(dest->sock, &header, sizeof(header), 0, (struct sockaddr *)&dest->addr, sizeof(dest->addr)) == -1)
-            ERROR(3, dest->sock, dest->hostname);
-        packet_sent++;
+            Error_exit(ERROR_SEND, dest->sock, dest->hostname);
+        time.packet_sent++;
         
         socklen = sizeof(d_addr);
 
         if (recvfrom(dest->sock, &icmp, sizeof(icmp), 0, (struct sockaddr *)&d_addr, &socklen) == -1)
-            ERROR(4, dest->sock, dest->hostname);
+            Error_exit(ERROR_RECEIVE, dest->sock, dest->hostname);
         
-        if (sig == NO_SIGNAL) //|| sig == CTRLQUIT) // sig = 0 = no CTRLC 
+        if (sig == NO_SIGNAL)
         { 
             if (icmp.type == ICMP_ECHOREPLY) {
                 gettimeofday(&stop, NULL);
-                diff = timedifference_msec(start, stop);
-                printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=%.1f\n", sizeof(header), arg, dest->hostname, seq, ttl, diff);
-                packet_received++;
+                time.packet_time_diff = timedifference_msec(start, stop);
+                printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=%d\n", sizeof(header), arg, dest->hostname, time.seq, ttl, time.all_time);
+                time.packet_received++;
             }
             else
-                ERROR(5, dest->sock, dest->hostname);
-            all_time[seq].time = diff;
+                Error_exit(ERROR_ECHO_REPLY, dest->sock, dest->hostname);
+            time.time[time.seq] = time.packet_time_diff;
         }
-        usleep(SL);
-        seq++;
-        header.icmp.un.echo.sequence = seq;
+        usleep(PING_SLEEP);
+        time.seq++;
+        header.icmp.un.echo.sequence = time.seq;
     }
 
     close(dest->sock);
@@ -109,10 +126,10 @@ void    sendPingNoVerbose(t_ping *dest, char *arg) {
 
 void sigint_handler(int signal) {
     if (signal == SIGINT) {
-        sig = CTRLC; // 1
+        sig = CTRLC;
     }
     else if (signal == SIGQUIT) {
-        sig = CTRLQUIT; // 2
+        sig = CTRLQUIT;
     }
 }
 
@@ -139,7 +156,7 @@ int main(int argc, char **argv) {
         printf("ft_ping: %s: Name or service not known\n", argv[1]);
     }
     else
-        sendPingNoVerbose(&dest, argv[1]);
+        sendPing(&dest, argv[1]);
     //printf("%s\n", dest.hostname);
     free(dest.hostname);
     //freeDest(&dest);

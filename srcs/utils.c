@@ -6,39 +6,39 @@ void freeDest(t_ping *dest) {
     free(dest->hostname);
 }
 
-float calc_min(t_time *time, int sequence) {
+float calc_min(t_time time) {
 
     int i = 0;
-    float t = time[i].time;
-    while (i < sequence) {
-        if (time[i].time < t)
-            t = time[i].time;
+    float t = time.time[i];
+    while (i < time.seq) {
+        if (time.time[i] < t)
+            t = time.time[i];
         i++;
     }
     return (t);
 }
 
-float calc_max(t_time *time, int sequence) {
+float calc_max(t_time time) {
 
     int i = 0;
-    float t = time[i].time;
-    while (i < sequence) {
-        if (time[i].time > t)
-            t = time[i].time;
+    float t = time.time[i];
+    while (i < time.seq) {
+        if (time.time[i] > t)
+            t = time.time[i];
         i++;
     }
     return (t);
 }
 
-float calc_avg(t_time *time, int sequence) {
+float calc_avg(t_time time) {
 
     float sum = 0, avg = 0;
     int i = 0;
-    while (i < sequence) {
-        sum += time[i].time;
+    while (i < time.seq) {
+        sum += time.time[i];
         i++;
     }
-    avg = sum / sequence;
+    avg = sum / time.seq;
     return (avg);
 }
 
@@ -63,27 +63,26 @@ Prendre la racine carrée de la variance pour obtenir l'écart type (mdev)
 //}
 
 // mettre static qui passe 0 ou 1 pour print, pas avec le signal
-void Quit_ProgramSIGINT(char *arg, int seq, float ms, int packet_sent, int packet_received, t_time *time, int time_sigint) {
+void Quit_ProgramSIGINT(char *arg, t_time time) {
+
     float packet_loss = 0, min = 0, max = 0, avg = 0;
-    (void)ms;
-    if (sig == CTRLC) {
-        packet_loss = (float)((packet_sent - packet_received) / packet_sent) * 100;
-        min = calc_min(time, seq);
-        max = calc_max(time, seq);
-        avg = calc_avg(time, seq);
+    if (sig == CTRLC) 
+    {
+        packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
+        min = calc_min(time);
+        max = calc_max(time);
+        avg = calc_avg(time);
         printf("\n--- %s ping statistics ---\n", arg);
-        printf("%d packets transmitted, %d received, 0%% packet loss, time %dms\n", seq, seq, time_sigint);
+        printf("%d packets transmitted, %d received, 0%% packet loss, time %dms\n", time.seq, time.seq, time.all_time);
         printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/0 ms", min, avg, max);
         exit(0);
     }
-    else if (sig == CTRLQUIT) {
-        // 3/3 packets, 0% loss, min/avg/ewma/max = 17.580/17.656/17.674/17.704 ms
-        packet_loss = (float)((packet_sent - packet_received) / packet_sent) * 100;
-        //float min = calc_min(time);
-        //float max = calc_max(time)
-        printf("%d/%d packets, %f loss, min,avg,ewma,max =  %.3fms\n", packet_received, packet_sent, packet_loss, time[0].time);
+    else if (sig == CTRLQUIT) 
+    {
+        packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
+        printf("%d/%d packets, %f loss, min,avg,ewma,max =  %.3fms\n", time.packet_received, time.packet_sent, packet_loss, time.time[0]);
 
-        usleep(SL);
+        usleep(PING_SLEEP);
         sig = 0;
     }
 }
@@ -118,7 +117,7 @@ int ParseArg(int argc, char **argv, t_ping *dest) {
     return (0);
 }
 
-void ERROR(int n, int sock, char *host) { // penser a free et close le fd
+void Error_exit(int n, int sock, char *host) { // penser a free et close le fd
 
     switch (n) {
         case 1:

@@ -84,9 +84,15 @@ struct icmphdr
     uint16_t sequence;
 };*/
 
+#define ERROR_FD 1
+#define ERROR_SEND 2
+#define ERROR_SOCKET 3
+#define ERROR_RECEIVE 4
+#define ERROR_ECHO_REPLY 5 
+
 extern int sig;
 
-#define SL 1000000
+#define PING_SLEEP 1000000
 #define NO_SIGNAL 0
 #define CTRLC 1
 #define CTRLQUIT 2
@@ -103,21 +109,27 @@ typedef struct s_ping {
     struct sockaddr_in      addr; 
     char                    *hostname;
     int                     sock;
-    int                     verbose;
+    int                     verbose;  
 
 }               t_ping;
 
 typedef struct s_time {
 
-    float time;
+    float time[4096];
+    float packet_time_diff;
+    int packet_received;
+    int packet_sent;
+    int all_time;
+    int seq;
+
 
 }              t_time;
 
 // Utils
 void freeDest(t_ping *dest);
-void Quit_ProgramSIGINT(char *arg, int seq, float ms,  int packet_sent, int packet_received,  t_time *time, int time_all);
+void Quit_ProgramSIGINT(char *arg, t_time time);
 int ParseArg(int argc, char **argv, t_ping *dest);
-void ERROR(int n, int sock, char *host);
+void Error_exit(int n, int sock, char *host);
 
 // main
 void  resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in *addr_dest);
