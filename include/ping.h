@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <stdbool.h>
 #include <arpa/inet.h>
 #include <signal.h>
 #include <sys/time.h>
@@ -109,7 +110,7 @@ typedef struct s_ping {
     struct sockaddr_in      addr; 
     char                    *hostname;
     int                     sock;
-    int                     verbose;  
+    bool                     verbose;  
 
 }               t_ping;
 
@@ -127,7 +128,7 @@ typedef struct s_time {
 
 // Utils
 void freeDest(t_ping *dest);
-void Quit_ProgramSIGINT(char *arg, t_time time);
+int check_signal(char *arg, t_time time);
 int ParseArg(int argc, char **argv, t_ping *dest);
 void Error_exit(int n, int sock, char *host);
 

@@ -63,12 +63,14 @@ Prendre la racine carrée de la variance pour obtenir l'écart type (mdev)
 //}
 
 // mettre static qui passe 0 ou 1 pour print, pas avec le signal
-void Quit_ProgramSIGINT(char *arg, t_time time) {
+int check_signal(char *arg, t_time time) {
 
     float packet_loss = 0, min = 0, max = 0, avg = 0;
+
     if (sig == CTRLC) 
     {
         packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
+
         min = calc_min(time);
         max = calc_max(time);
         avg = calc_avg(time);
@@ -80,11 +82,17 @@ void Quit_ProgramSIGINT(char *arg, t_time time) {
     else if (sig == CTRLQUIT) 
     {
         packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
-        printf("%d/%d packets, %f loss, min,avg,ewma,max =  %.3fms\n", time.packet_received, time.packet_sent, packet_loss, time.time[0]);
-
-        usleep(PING_SLEEP);
+    
+        min = calc_min(time);
+        max = calc_max(time);
+        avg = calc_avg(time);
+        packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
+        printf("%d/%d packets, %f loss, min,avg,ewma,max =  %.3f/%.3f/%.3f/%.3fms\n", time.packet_received, time.packet_sent, packet_loss, min, avg, max, time.time[0]);
+        //usleep(PING_SLEEP);
         sig = 0;
+        return (1);
     }
+    return (0);
 }
 
 int ParseArg(int argc, char **argv, t_ping *dest) {
@@ -93,19 +101,19 @@ int ParseArg(int argc, char **argv, t_ping *dest) {
         return (0);
     }
     char *hostname = NULL;
-    dest->verbose = 0;
+    dest->verbose = false;
     dest->hostname = NULL;
     dest->sock = -1;
     if (argc == 2)
         hostname = argv[1];
     else if (argc == 3 && strcmp(argv[1], "-v") == 0) {
-        dest->verbose = 1;
+        dest->verbose = true;
         if (argc == 3) {
             hostname = argv[2];
         }
     } 
     else if (argc == 3 && strcmp(argv[2], "-v") == 0) {
-        dest->verbose = 1;
+        dest->verbose = true;
         hostname = argv[1];
     }
     if (hostname) {
