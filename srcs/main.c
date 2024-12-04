@@ -88,7 +88,6 @@ void    sendPing(t_ping *dest, char *arg) {
     if (dest->verbose == true) {
         printf("ping: sock4.fd: %d (socktype: SOCK_DGRAM), hints.ai_family: AF_INET\n\n", dest->sock);
         printf("ai->ai_family: AF_INET, ai->ai_canonname: '%s'\n", arg);
-
     }
 
     printf("PING %s (%s) %ld(%ld) bytes of data.\n", arg, dest->hostname, 64 - sizeof(struct icmphdr), 56 + sizeof(struct icmphdr) + 20);

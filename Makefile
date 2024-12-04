@@ -14,7 +14,7 @@ OBJ=$(SRC:.c=.o)
 OBJ_LIB=$(libft/*.o)
 
 $(NAME): $(OBJ)
-	$(CC) $(OBJ) -o $(NAME) -I libft/ -L libft/ -lft
+	$(CC) $(OBJ) -o $(NAME)
 
 all: $(NAME)
 

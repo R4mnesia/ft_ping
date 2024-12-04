@@ -1,7 +1,7 @@
 #ifndef PING_H
 #define PING_H
 
-#include "../libft/libft.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -122,7 +122,6 @@ typedef struct s_time {
     int packet_sent;
     int all_time;
     int seq;
-
 
 }              t_time;
 
