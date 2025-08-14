@@ -125,15 +125,24 @@ typedef struct s_time {
 
 }              t_time;
 
-// Utils
-void freeDest(t_ping *dest);
-int check_signal(char *arg, t_time time);
-int ParseArg(int argc, char **argv, t_ping *dest);
-void Error_exit(int n, int sock, char *host);
 
-// main
-void  resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in *addr_dest);
+// main.c 
+float           timedifference_msec(struct timeval t0, struct timeval t1);
 
+// utils.c
+void            freeDest(t_ping *dest);
+int             check_signal(char *arg, t_time time);
+int             ParseArg(int argc, char **argv, t_ping *dest);
+void            Error_exit(int n, int sock, char *host);
+
+// ping.c
+void            sendPing(t_ping *dest, char *arg);
+
+// icmp.c
+void            resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in *addr_dest);
+unsigned short  checksum(void *b, int len);
+void            set_header_icmp(t_header *header);
+void            set_struct_time(t_time *time);
 
 
 #endif

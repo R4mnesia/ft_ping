@@ -1,12 +1,13 @@
 #include "../include/ping.h"
 
 int sig = 0;
-void freeDest(t_ping *dest) {
-
+void freeDest(t_ping *dest)
+{
     free(dest->hostname);
 }
 
-float calc_min(t_time time) {
+float calc_min(t_time time)
+{
 
     int i = 0;
     float t = time.time[i];
@@ -18,7 +19,8 @@ float calc_min(t_time time) {
     return (t);
 }
 
-float calc_max(t_time time) {
+float calc_max(t_time time)
+{
 
     int i = 0;
     float t = time.time[i];
@@ -30,7 +32,8 @@ float calc_max(t_time time) {
     return (t);
 }
 
-float calc_avg(t_time time) {
+float calc_avg(t_time time)
+{
 
     float sum = 0, avg = 0;
     int i = 0;
@@ -63,7 +66,8 @@ Prendre la racine carrée de la variance pour obtenir l'écart type (mdev)
 //}
 
 // mettre static qui passe 0 ou 1 pour print, pas avec le signal
-int check_signal(char *arg, t_time time) {
+int check_signal(char *arg, t_time time)
+{
 
     float packet_loss = 0, min = 0, max = 0, avg = 0;
 
@@ -95,7 +99,8 @@ int check_signal(char *arg, t_time time) {
     return (0);
 }
 
-int ParseArg(int argc, char **argv, t_ping *dest) {
+int ParseArg(int argc, char **argv, t_ping *dest)
+{
     
     if (argc < 2) {
         return (0);
@@ -125,7 +130,8 @@ int ParseArg(int argc, char **argv, t_ping *dest) {
     return (0);
 }
 
-void Error_exit(int n, int sock, char *host) { // penser a free et close le fd
+void Error_exit(int n, int sock, char *host)
+{ // penser a free et close le fd
 
     switch (n) {
         case 1:
