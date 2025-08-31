@@ -3,6 +3,7 @@ NAME = ft_ping
 SRC = srcs/main.c \
 	  srcs/utils.c \
 	  srcs/icmp.c \
+	  srcs/parsing.c \
 	  srcs/ping.c
 
 FLAGS = -Wall -Wextra -Werror

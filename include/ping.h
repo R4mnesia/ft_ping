@@ -145,5 +145,7 @@ unsigned short  checksum(void *b, int len);
 void            set_header_icmp(t_header *header);
 void            set_struct_time(t_time *time);
 
+// parsing.c
+int             ParseArg(int argc, char **argv, t_ping *dest);
 
 #endif

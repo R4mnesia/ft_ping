@@ -66,26 +66,6 @@ float calc_mdev(t_time time)
     return sqrtf(sum / time.seq);
 }
 
-/*
-Calculer la moyenne des temps de réponse.
-Soustraire la moyenne de chaque temps de réponse pour obtenir les écarts.
-Élever chaque écart au carré.
-Faire la somme de ces carrés.
-Diviser par le nombre de réponses pour obtenir la variance.
-Prendre la racine carrée de la variance pour obtenir l'écart type (mdev)
-*/
-
-//float calc_mdev(t_time *time, int sequence, float avg) {
-//
-//    float tab[sequence] = {0};
-//    int i = 0;
-//    while (i < sequence) {
-//        tab[i] = time[i].time - avg;
-//        i++;
-//    }
-//
-//}
-
 // mettre static qui passe 0 ou 1 pour print, pas avec le signal
 int check_signal(char *arg, t_time time)
 {
@@ -122,46 +102,8 @@ int check_signal(char *arg, t_time time)
     return (0);
 }
 
-int ParseArg(int argc, char **argv, t_ping *dest)
-{
-    
-    if (argc < 2) {
-        return (0);
-    }
-
-    char *hostname = NULL;
-    dest->verbose = false;
-    dest->hostname = NULL;
-    dest->sock = -1;
-
-    if (argc == 2)
-        hostname = argv[1];
-    else if (argc == 3 && strcmp(argv[1], "-v") == 0)
-    {
-        dest->verbose = true;
-        if (argc == 3)
-        {
-            hostname = argv[2];
-        }
-    } 
-    else if (argc == 3 && strcmp(argv[2], "-v") == 0)
-    {
-        dest->verbose = true;
-        hostname = argv[1];
-    }
-
-    if (hostname)
-    {
-        resolve_hostname(dest, hostname, (struct sockaddr_in *)&dest->addr);
-        dest->sock = 0;
-        return (1);
-    }
-
-    return (0);
-}
-
 void Error_exit(int n, int sock, char *host)
-{ // penser a free et close le fd
+{
 
     switch (n) {
         case 1:

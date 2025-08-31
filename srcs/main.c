@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
     if (argc > 3 || argc < 2)
     {
-        printf("Error arguments\n");
+        printf("ft_ping: usage error: Destination address required\n");
         return (1);
     }
     
@@ -46,7 +46,7 @@ int main(int argc, char **argv)
         freeDest(&dest);
         return (1);
     }
-    
+
     if (!dest.hostname) {
         printf("ft_ping: %s: Name or service not known\n", argv[1]);
     }
