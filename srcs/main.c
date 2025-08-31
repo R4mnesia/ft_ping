@@ -1,6 +1,7 @@
 #include "../include/ping.h"
 
-//int globalVariable = 0;
+// Free hostname on sigint handler
+static t_ping *ptr_dest = NULL;
 
 float timedifference_msec(struct timeval t0, struct timeval t1)
 {
@@ -16,9 +17,12 @@ void sigint_handler(int signal)
     else if (signal == SIGQUIT) {
         sig = CTRLQUIT;
     }
+    if (ptr_dest && ptr_dest->hostname)
+        free(ptr_dest->hostname);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
     if (argc > 3 || argc < 2)
     {
@@ -32,7 +36,9 @@ int main(int argc, char **argv) {
     act.sa_handler = &sigint_handler;
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGQUIT, &act, NULL);
+
     t_ping  dest;
+    ptr_dest = &dest;
 
     if (!ParseArg(argc, argv, &dest))
     {
@@ -40,14 +46,12 @@ int main(int argc, char **argv) {
         freeDest(&dest);
         return (1);
     }
+    
     if (!dest.hostname) {
         printf("ft_ping: %s: Name or service not known\n", argv[1]);
     }
     else
         sendPing(&dest, argv[1]);
     
-    //printf("%s\n", dest.hostname);
-    free(dest.hostname);
-    //freeDest(&dest);
     return (0);
 }
