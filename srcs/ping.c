@@ -53,7 +53,7 @@ void    sendPing(t_ping *dest, char *arg)
         {
                 gettimeofday(&stop, NULL);
                 time.packet_time_diff = timedifference_msec(start, stop);
-                printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=%.1f\n", sizeof(header), arg, dest->hostname, time.seq, ttl, time.packet_time_diff);
+                printf("%ld bytes from %s (%s): icmp_seq:%d ttl=%d time=%.1f ms\n", sizeof(header), arg, dest->hostname, time.seq, ttl, time.packet_time_diff);
                 time.packet_received++;
         }
         else

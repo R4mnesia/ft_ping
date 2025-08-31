@@ -5,7 +5,7 @@ SRC = srcs/main.c \
 	  srcs/icmp.c \
 	  srcs/ping.c
 
-FLAGS = -Wall -Wextra -Werror 
+FLAGS = -Wall -Wextra -Werror
 
 CC= gcc
 
@@ -16,7 +16,7 @@ OBJ=$(SRC:.c=.o)
 OBJ_LIB=$(libft/*.o)
 
 $(NAME): $(OBJ)
-	$(CC) $(OBJ) -o $(NAME)
+	$(CC) $(OBJ) -o $(NAME) -lm
 
 all: $(NAME)
 

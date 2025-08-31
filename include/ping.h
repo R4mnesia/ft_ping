@@ -22,6 +22,7 @@
 #include <sys/types.h>
 #include <net/if.h>
 #include <time.h>
+#include <math.h>
 
 //#define DEFAULT_PACKET_SIZE 64
 //#define DEFAULT_COUNT_PACKET 4

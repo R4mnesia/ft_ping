@@ -22,9 +22,11 @@ float calc_min(t_time time)
 float calc_max(t_time time)
 {
 
-    int i = 0;
-    float t = time.time[i];
-    while (i < time.seq) {
+    int     i = 0;
+    float   t = time.time[i];
+
+    while (i < time.seq)
+    {
         if (time.time[i] > t)
             t = time.time[i];
         i++;
@@ -35,14 +37,33 @@ float calc_max(t_time time)
 float calc_avg(t_time time)
 {
 
-    float sum = 0, avg = 0;
-    int i = 0;
-    while (i < time.seq) {
+    float   sum = 0, avg = 0;
+    int     i = 0;
+
+    while (i < time.seq)
+    {
         sum += time.time[i];
         i++;
     }
+
     avg = sum / time.seq;
     return (avg);
+}
+
+float calc_mdev(t_time time)
+{
+    float avg = calc_avg(time);
+    float sum = 0;
+    int     i = 0;
+
+    while (i < time.seq)
+    {
+        float diff = time.time[i] - avg;
+        sum += diff * diff;
+        i++;
+    }
+
+    return sqrtf(sum / time.seq);
 }
 
 /*
@@ -69,7 +90,7 @@ Prendre la racine carrée de la variance pour obtenir l'écart type (mdev)
 int check_signal(char *arg, t_time time)
 {
 
-    float packet_loss = 0, min = 0, max = 0, avg = 0;
+    float packet_loss = 0, min = 0, max = 0, avg = 0, mdev = 0;
 
     if (sig == CTRLC) 
     {
@@ -78,9 +99,11 @@ int check_signal(char *arg, t_time time)
         min = calc_min(time);
         max = calc_max(time);
         avg = calc_avg(time);
+        mdev = calc_mdev(time);
+
         printf("\n--- %s ping statistics ---\n", arg);
         printf("%d packets transmitted, %d received, 0%% packet loss, time %dms\n", time.seq, time.seq, time.all_time);
-        printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/0 ms", min, avg, max);
+        printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n", min, avg, max, mdev);
         exit(0);
     }
     else if (sig == CTRLQUIT) 
@@ -105,23 +128,30 @@ int ParseArg(int argc, char **argv, t_ping *dest)
     if (argc < 2) {
         return (0);
     }
+
     char *hostname = NULL;
     dest->verbose = false;
     dest->hostname = NULL;
     dest->sock = -1;
+
     if (argc == 2)
         hostname = argv[1];
-    else if (argc == 3 && strcmp(argv[1], "-v") == 0) {
+    else if (argc == 3 && strcmp(argv[1], "-v") == 0)
+    {
         dest->verbose = true;
-        if (argc == 3) {
+        if (argc == 3)
+        {
             hostname = argv[2];
         }
     } 
-    else if (argc == 3 && strcmp(argv[2], "-v") == 0) {
+    else if (argc == 3 && strcmp(argv[2], "-v") == 0)
+    {
         dest->verbose = true;
         hostname = argv[1];
     }
-    if (hostname) {
+
+    if (hostname)
+    {
         resolve_hostname(dest, hostname, (struct sockaddr_in *)&dest->addr);
         dest->sock = 0;
         return (1);
