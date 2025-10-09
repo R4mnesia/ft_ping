@@ -46,7 +46,6 @@ int main(int argc, char **argv)
         freeDest(&dest);
         return (1);
     }
-
     if (!dest.hostname) {
         printf("ft_ping: %s: Name or service not known\n", argv[1]);
     }

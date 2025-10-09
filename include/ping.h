@@ -98,6 +98,8 @@ extern int sig;
 #define NO_SIGNAL 0
 #define CTRLC 1
 #define CTRLQUIT 2
+#define ICMP_DATA_LEN 56
+#define PACKET_SIZE (sizeof(struct icmphdr) + ICMP_DATA_LEN)
 
 typedef struct s_header {
 
