@@ -100,6 +100,7 @@ extern int sig;
 #define CTRLQUIT 2
 #define ICMP_DATA_LEN 56
 #define PACKET_SIZE (sizeof(struct icmphdr) + ICMP_DATA_LEN)
+#define DEFAULT_TTL 64
 
 typedef struct s_header {
 
