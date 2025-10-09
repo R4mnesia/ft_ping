@@ -92,15 +92,16 @@ int handle_reply(char *recvbuf, ssize_t recvd,
 
 void    sendPing(t_ping *dest, char *arg)
 {
-    unsigned int    ttl = DEFAULT_TTL;
-    unsigned short  pid16 = (unsigned short)(getpid() & 0xFFFF);
+    int             ttl = DEFAULT_TTL;
+    // Keep only the 16 least significant bits of the PID for portability
+    uint16_t        pid16 = (uint16_t)(getpid() & 0xFFFF);
     t_header        header;
     t_time          time;
 
     set_header_icmp(&header);
     set_struct_time(&time);
     
-    char packet[PACKET_SIZE]; // 64
+    char            packet[PACKET_SIZE]; // 64b
     memset(packet, 0, PACKET_SIZE);
 
     dest->sock = init_socket(dest, ttl);
@@ -111,20 +112,18 @@ void    sendPing(t_ping *dest, char *arg)
         printf("ai->ai_family: AF_INET, ai->ai_canonname: '%s'\n", arg);
     }
 
-    printf("PING %s (%s) %ld(%ld) bytes of data.\n", arg, dest->hostname, 64 - sizeof(struct icmphdr), 56 + sizeof(struct icmphdr) + 20);
+    printf("PING %s (%s) %d(%ld) bytes of data.\n", arg, dest->hostname, ICMP_DATA_LEN, PACKET_SIZE + 20);
     while (1)
     {
         // SET HEADER ICMP
         build_packet(packet, pid16, header.icmp.un.echo.sequence);
 
-        if (check_signal(arg, time)) {
+        if (check_signal(arg, time))
             continue ;
-        }
 
         if (sendto(dest->sock, &packet, PACKET_SIZE, 0, (struct sockaddr *)&dest->addr, sizeof(dest->addr)) == -1)
             Error_exit(ERROR_SEND, dest->sock, dest->hostname);
         time.packet_sent++;
-
 
         // RECEIVE
         char    recvbuf[1500];
@@ -146,8 +145,13 @@ void    sendPing(t_ping *dest, char *arg)
             }
         }
         
-        struct  iphdr *ip = (struct iphdr *)recvbuf;
-        int     ip_hdr_len = ip->ihl * 4;
+        /*
+            ihl = Internet Header Length 
+            get the actual size of the IP header in bytes -> * 4 
+
+        */
+        struct          iphdr *ip = (struct iphdr *)recvbuf;
+        unsigned int    ip_hdr_len = ip->ihl * 4;
 
         if (recvd < ip_hdr_len + (int)sizeof(struct icmphdr))
         {
