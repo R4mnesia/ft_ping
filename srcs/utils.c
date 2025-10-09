@@ -69,12 +69,12 @@ float calc_mdev(t_time time)
 // mettre static qui passe 0 ou 1 pour print, pas avec le signal
 int check_signal(char *arg, t_time time)
 {
-
-    float packet_loss = 0, min = 0, max = 0, avg = 0, mdev = 0;
-
+    (void)arg;
+    (void)time;
+    //float packet_loss = 0, min = 0, max = 0, avg = 0, mdev = 0;
     if (sig == CTRLC) 
     {
-        packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
+        /*packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
 
         min = calc_min(time);
         max = calc_max(time);
@@ -83,19 +83,19 @@ int check_signal(char *arg, t_time time)
 
         printf("\n--- %s ping statistics ---\n", arg);
         printf("%d packets transmitted, %d received, 0%% packet loss, time %dms\n", time.seq, time.seq, time.all_time);
-        printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n", min, avg, max, mdev);
+        printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n", min, avg, max, mdev);*/
         exit(0);
     }
     else if (sig == CTRLQUIT) 
     {
-        packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
+        /*packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
     
         min = calc_min(time);
         max = calc_max(time);
         avg = calc_avg(time);
         packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
         printf("%d/%d packets, %f loss, min,avg,ewma,max =  %.3f/%.3f/%.3f/%.3fms\n", time.packet_received, time.packet_sent, packet_loss, min, avg, max, time.time[0]);
-        //usleep(PING_SLEEP);
+        //usleep(PING_SLEEP);*/
         sig = 0;
         return (1);
     }
