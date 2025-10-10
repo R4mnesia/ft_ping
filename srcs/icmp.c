@@ -14,7 +14,11 @@ void    resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in 
         };
     */
 
-    dest->hostname = strdup(inet_ntoa(*(struct in_addr *)host->h_addr)); // binary IP to strings IP
+    char ip_str[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, host->h_addr, ip_str, sizeof(ip_str));
+    dest->hostname = strdup(ip_str);
+
+    //dest->hostname = strdup(inet_ntoa(*(struct in_addr *)host->h_addr)); // binary IP to strings IP
     (*addr_dest).sin_family = host->h_addrtype; // AF_INET (ipv4)
     (*addr_dest).sin_port = 0;
     (*addr_dest).sin_addr.s_addr = *(long *)host->h_addr;
@@ -36,21 +40,8 @@ unsigned short checksum(void *b, int len)
     return result;
 }
 
-void    set_header_icmp(t_header *header)
-{
-    memset(&header->icmp, 0, sizeof(struct icmphdr));
-    memset(header->rest, 0, (64 - sizeof(struct icmphdr)));
-    header->icmp.type = ICMP_ECHO; // 8
-    header->icmp.code = 0;
-    header->icmp.checksum = 0;
-    header->icmp.checksum = checksum(&header->icmp, sizeof(header->icmp)); // function for check
-    header->icmp.un.echo.sequence = 0; // number of request
-    header->icmp.un.echo.id = getpid(); // getpid() ?? 
-}
-
 void    set_struct_time(t_time *time)
 {
-
     time->packet_received = 0;
     time->packet_time_diff = 0;
     time->packet_sent = 0;

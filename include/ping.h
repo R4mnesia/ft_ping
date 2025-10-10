@@ -145,7 +145,6 @@ void            sendPing(t_ping *dest, char *arg);
 // icmp.c
 void            resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in *addr_dest);
 unsigned short  checksum(void *b, int len);
-void            set_header_icmp(t_header *header);
 void            set_struct_time(t_time *time);
 
 // parsing.c

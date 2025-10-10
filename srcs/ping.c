@@ -76,7 +76,7 @@ int handle_reply(char *recvbuf, ssize_t recvd,
         time->packet_time_diff = rtt;
 
         int icmp_bytes = recvd - ip_hdr_len;
-        printf("%d bytes from %s (%s): icmp_seq=%u ttl=%u time=%.3f ms\n",
+        printf("%d bytes from %s (%s): icmp_seq=%u ttl=%u time=%.1f ms\n",
                icmp_bytes, dest->hostname, dest->hostname, r_seq, ip->ttl, rtt);
 
         return (1); // valid reply handled
@@ -95,13 +95,10 @@ void    sendPing(t_ping *dest, char *arg)
     int             ttl = DEFAULT_TTL;
     // Keep only the 16 least significant bits of the PID for portability
     uint16_t        pid16 = (uint16_t)(getpid() & 0xFFFF);
-    t_header        header;
+    char            packet[PACKET_SIZE]; // 64b
     t_time          time;
 
-    set_header_icmp(&header);
     set_struct_time(&time);
-    
-    char            packet[PACKET_SIZE]; // 64b
     memset(packet, 0, PACKET_SIZE);
 
     dest->sock = init_socket(dest, ttl);
@@ -115,8 +112,9 @@ void    sendPing(t_ping *dest, char *arg)
     printf("PING %s (%s) %d(%ld) bytes of data.\n", arg, dest->hostname, ICMP_DATA_LEN, PACKET_SIZE + 20);
     while (1)
     {
+
         // SET HEADER ICMP
-        build_packet(packet, pid16, header.icmp.un.echo.sequence);
+        build_packet(packet, pid16, time.seq);
 
         if (check_signal(arg, time))
             continue ;
@@ -144,6 +142,7 @@ void    sendPing(t_ping *dest, char *arg)
                 Error_exit(ERROR_RECEIVE, dest->sock, dest->hostname);
             }
         }
+        time.packet_received++;
         
         /*
             ihl = Internet Header Length 
@@ -166,7 +165,6 @@ void    sendPing(t_ping *dest, char *arg)
 
         time.time[time.seq] = time.packet_time_diff;
         time.seq++;
-        header.icmp.un.echo.sequence = time.seq;
         usleep(PING_SLEEP);
         
     }

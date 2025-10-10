@@ -66,11 +66,24 @@ float calc_mdev(t_time time)
     return sqrtf(sum / time.seq);
 }
 
+float calc_ewma(t_time time, float alpha)
+{
+    if (time.seq == 0)
+        return 0.0f;
+
+    float ewma = time.time[0];
+    for (int i = 1; i < time.seq; i++)
+    {
+        ewma = alpha * time.time[i] + (1.0f - alpha) * ewma;
+    }
+    return ewma;
+}
+
 // mettre static qui passe 0 ou 1 pour print, pas avec le signal
 int check_signal(char *arg, t_time time)
 {
 
-    float packet_loss = 0, min = 0, max = 0, avg = 0, mdev = 0;
+    float packet_loss = 0, min = 0, max = 0, avg = 0, mdev = 0, ewma = 0;
     if (sig == CTRLC) 
     {
         packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
@@ -88,14 +101,16 @@ int check_signal(char *arg, t_time time)
     }
     else if (sig == CTRLQUIT) 
     {
-        packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
+        if (time.packet_sent > 0)
+            packet_loss = ((float)(time.packet_sent - time.packet_received) / time.packet_sent) * 100.0f;
+        else
+            packet_loss = 0.0f;
     
         min = calc_min(time);
         max = calc_max(time);
         avg = calc_avg(time);
-        packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
-        printf("%d/%d packets, %f loss, min,avg,ewma,max =  %.3f/%.3f/%.3f/%.3fms\n", time.packet_received, time.packet_sent, packet_loss, min, avg, max, time.time[0]);
-        //usleep(PING_SLEEP);
+        ewma = calc_ewma(time, 0.3f);
+        printf("%d/%d packets, %d loss, min,avg,ewma,max =  %.3f/%.3f/%.3f/%.3fms\n", time.packet_received, time.packet_sent, (int)packet_loss, min, avg, ewma, max);
         sig = 0;
         return (1);
     }
@@ -107,26 +122,26 @@ void Error_exit(int n, int sock, char *host)
 
     switch (n) {
         case 1:
-            dprintf(2, "Error: FD\n");
+            fprintf(stderr, "Error: FD\n");
             free(host);
             exit(0);
         case 2:
-            dprintf(2, "Error: send message\n");
+            fprintf(stderr, "Error: send message\n");
             close(sock);
             free(host);
             exit(0);
         case 3:
-            dprintf(2, "Error: Socket TTL\n");
+            fprintf(stderr, "Error: Socket TTL\n");
             close(sock);
             free(host);
             exit(0);
         case 4:
-            dprintf(2, "Error: receive message\n");
+            fprintf(stderr, "Error: receive message\n");
             close(sock);
             free(host);
             exit(0);
         case 5: 
-            dprintf(2, "Error: Packet no echo reply\n");
+            fprintf(stderr, "Error: Packet no echo reply\n");
             close(sock);
             free(host);
             exit(0);

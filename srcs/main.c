@@ -11,22 +11,29 @@ float timedifference_msec(struct timeval t0, struct timeval t1)
 
 void sigint_handler(int signal)
 {
-    if (signal == SIGINT) {
+    if (signal == SIGINT)
+    {
         sig = CTRLC;
+        if (ptr_dest && ptr_dest->hostname)
+            free(ptr_dest->hostname);
     }
-    else if (signal == SIGQUIT) {
+    else if (signal == SIGQUIT)
+    {
         sig = CTRLQUIT;
     }
-    if (ptr_dest && ptr_dest->hostname)
-        free(ptr_dest->hostname);
+
 }
 
 int main(int argc, char **argv)
 {
-
+    if (geteuid() != 0)
+    {
+        fprintf(stderr, "ft_ping: must be run as root\n");
+        return (1);
+    }
     if (argc > 3 || argc < 2)
     {
-        printf("ft_ping: usage error: Destination address required\n");
+        fprintf(stderr, "ft_ping: usage error: Destination address required\n");
         return (1);
     }
     
@@ -47,7 +54,7 @@ int main(int argc, char **argv)
         return (1);
     }
     if (!dest.hostname) {
-        printf("ft_ping: %s: Name or service not known\n", argv[1]);
+        fprintf(stderr, "ft_ping: %s: Name or service not known\n", argv[1]);
     }
     else
         sendPing(&dest, argv[1]);
