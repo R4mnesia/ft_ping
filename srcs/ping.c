@@ -163,9 +163,10 @@ void    sendPing(t_ping *dest, char *arg)
         // ECHO REPLY
         handle_reply(recvbuf, recvd, pid16, dest, &time);
 
+        usleep(PING_SLEEP);
+
         time.time[time.seq] = time.packet_time_diff;
         time.seq++;
-        usleep(PING_SLEEP);
         
     }
 

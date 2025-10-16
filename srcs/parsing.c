@@ -1,10 +1,22 @@
 #include "../include/ping.h"
 
+void    help() 
+{
+    printf("Usage\n");
+    printf("    ft_ping [options] <destination>\n\n");
+    printf("Options:\n");
+    printf("        -v              varbose output\n\n");
+}
+
 int ParseArg(int argc, char **argv, t_ping *dest)
 {
-    
-    if (argc < 2) {
-        return (0);
+    for (int i = 0; i < (int)strlen(*argv); i++)
+    {
+        if (argv[i] && strcmp(argv[i], "-?") == 0) 
+        {
+            help();
+            return (1);
+        }
     }
 
     char *hostname = NULL;

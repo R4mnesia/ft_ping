@@ -17,11 +17,6 @@ void sigint_handler(int signal)
         if (ptr_dest && ptr_dest->hostname)
             free(ptr_dest->hostname);
     }
-    else if (signal == SIGQUIT)
-    {
-        sig = CTRLQUIT;
-    }
-
 }
 
 int main(int argc, char **argv)
@@ -31,12 +26,11 @@ int main(int argc, char **argv)
         fprintf(stderr, "ft_ping: must be run as root\n");
         return (1);
     }
-    if (argc > 3 || argc < 2)
+    if (argc == 1)
     {
         fprintf(stderr, "ft_ping: usage error: Destination address required\n");
         return (1);
     }
-    
     struct sigaction act;
     bzero(&act, sizeof(act));
 
@@ -49,7 +43,7 @@ int main(int argc, char **argv)
 
     if (!ParseArg(argc, argv, &dest))
     {
-        printf("Error arguments\n");
+        printf("ft_ping: %s: Name or service not known\n", argv[argc - 1]);
         freeDest(&dest);
         return (1);
     }

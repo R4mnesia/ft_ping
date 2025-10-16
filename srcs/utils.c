@@ -79,14 +79,12 @@ float calc_ewma(t_time time, float alpha)
     return ewma;
 }
 
-// mettre static qui passe 0 ou 1 pour print, pas avec le signal
 int check_signal(char *arg, t_time time)
 {
 
-    float packet_loss = 0, min = 0, max = 0, avg = 0, mdev = 0, ewma = 0;
     if (sig == CTRLC) 
     {
-        packet_loss = (float)((time.packet_sent - time.packet_received) / time.packet_sent) * 100;
+        float min = 0, max = 0, avg = 0, mdev = 0;
 
         min = calc_min(time);
         max = calc_max(time);
@@ -97,22 +95,6 @@ int check_signal(char *arg, t_time time)
         printf("%d packets transmitted, %d received, 0%% packet loss, time %dms\n", time.seq, time.seq, time.all_time);
         printf("rtt min/avg/max/mdev = %.3f/%.3f/%.3f/%.3f ms\n", min, avg, max, mdev);
         exit(0);
-        
-    }
-    else if (sig == CTRLQUIT) 
-    {
-        if (time.packet_sent > 0)
-            packet_loss = ((float)(time.packet_sent - time.packet_received) / time.packet_sent) * 100.0f;
-        else
-            packet_loss = 0.0f;
-    
-        min = calc_min(time);
-        max = calc_max(time);
-        avg = calc_avg(time);
-        ewma = calc_ewma(time, 0.3f);
-        printf("%d/%d packets, %d loss, min,avg,ewma,max =  %.3f/%.3f/%.3f/%.3fms\n", time.packet_received, time.packet_sent, (int)packet_loss, min, avg, ewma, max);
-        sig = 0;
-        return (1);
     }
     return (0);
 }
