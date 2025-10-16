@@ -5,7 +5,7 @@ static t_ping *ptr_dest = NULL;
 
 float timedifference_msec(struct timeval t0, struct timeval t1)
 {
-    return (t1.tv_sec - t0.tv_sec) * 1000.00f + (t1.tv_usec - t0.tv_usec) / 1000.00f;
+    return (double)(t1.tv_sec - t0.tv_sec) * 1000.0 + (double)(t1.tv_usec - t0.tv_usec) / 1000.0;
 }
 
 

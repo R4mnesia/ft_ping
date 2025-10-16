@@ -42,8 +42,7 @@ ssize_t receive_packet(int sockfd, char *buf, size_t buflen, struct sockaddr_in 
     return (recv);
 }
 
-int handle_reply(char *recvbuf, ssize_t recvd,
-                 unsigned short pid16, t_ping *dest, t_time *time)
+int handle_reply(char *recvbuf, ssize_t recvd, unsigned short pid16, t_ping *dest, t_time *time)
 {
     struct  iphdr *ip = (struct iphdr *)recvbuf;
     int     ip_hdr_len = ip->ihl * 4;
@@ -67,12 +66,12 @@ int handle_reply(char *recvbuf, ssize_t recvd,
             return 0;
         }
 
+
         // RTT calculation
         struct timeval *sent_tv = (struct timeval *)((char*)r_icmp + sizeof(struct icmphdr));
         struct timeval now;
         gettimeofday(&now, NULL);
         double rtt = timedifference_msec(*sent_tv, now);
-
         time->packet_time_diff = rtt;
 
         int icmp_bytes = recvd - ip_hdr_len;
@@ -124,16 +123,17 @@ void    sendPing(t_ping *dest, char *arg)
         time.packet_sent++;
 
         // RECEIVE
-        char    recvbuf[1500];
+        char    recvbuf[1500] = {0};
+
         struct  sockaddr_in src;
         ssize_t recvd = receive_packet(dest->sock, recvbuf, 1500, &src);
-        if (recvd < 0)
+        /*if (recvd < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
             {
                 printf("Request timeout for icmp_seq %d\n", time.seq);
                 // continue loop (like ping)
-                usleep(PING_SLEEP);
+                //usleep(PING_SLEEP);
                 continue;
             }
             else
@@ -141,7 +141,7 @@ void    sendPing(t_ping *dest, char *arg)
                 perror("recvfrom");
                 Error_exit(ERROR_RECEIVE, dest->sock, dest->hostname);
             }
-        }
+        }*/
         time.packet_received++;
         
         /*
@@ -152,13 +152,14 @@ void    sendPing(t_ping *dest, char *arg)
         struct          iphdr *ip = (struct iphdr *)recvbuf;
         unsigned int    ip_hdr_len = ip->ihl * 4;
 
-        if (recvd < ip_hdr_len + (int)sizeof(struct icmphdr))
+        /*if (recvd < ip_hdr_len + (int)sizeof(struct icmphdr))
         {
             fprintf(stderr, "Packet too short (%zd bytes)\n", recvd);
-            usleep(PING_SLEEP);
+            //usleep(PING_SLEEP);
 
             continue;
-        }
+        }*/
+        (void)ip_hdr_len;
 
         // ECHO REPLY
         handle_reply(recvbuf, recvd, pid16, dest, &time);
