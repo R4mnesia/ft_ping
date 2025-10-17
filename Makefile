@@ -4,9 +4,9 @@ SRC = srcs/main.c \
 	  srcs/utils.c \
 	  srcs/icmp.c \
 	  srcs/parsing.c \
-	  srcs/ping.c
+	  srcs/ft_ping.c
 
-FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror -Iinclude
 
 CC= gcc
 

@@ -1,4 +1,4 @@
-#include "../include/ping.h"
+#include "ft_ping.h"
 
 int init_socket(t_ping *dest, unsigned int ttl) 
 {
@@ -9,9 +9,9 @@ int init_socket(t_ping *dest, unsigned int ttl)
         Error_exit(ERROR_FD, dest->sock, dest->hostname);
 
     // SET TIMEVAL
-    struct timeval timeout = {1, 0}; // set tv_sec and tv_usec (1s timeout)
-    if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
-        Error_exit(ERROR_SOCKET, dest->sock, dest->hostname);
+   // struct timeval timeout = {1, 0}; // set tv_sec and tv_usec (1s timeout)
+   // if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0)
+   //     Error_exit(ERROR_SOCKET, dest->sock, dest->hostname);
 
     if (setsockopt(sock, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0) // set socket for ttl
         Error_exit(ERROR_SOCKET, sock, dest->hostname);
@@ -111,19 +111,23 @@ void    sendPing(t_ping *dest, char *arg)
     printf("PING %s (%s) %d(%ld) bytes of data.\n", arg, dest->hostname, ICMP_DATA_LEN, PACKET_SIZE + 20);
     while (1)
     {
+        usleep(PING_SLEEP);
 
         // SET HEADER ICMP
         build_packet(packet, pid16, time.seq);
 
-        if (check_signal(arg, time))
-            continue ;
+        check_signal(arg, time);
 
         if (sendto(dest->sock, &packet, PACKET_SIZE, 0, (struct sockaddr *)&dest->addr, sizeof(dest->addr)) == -1)
             Error_exit(ERROR_SEND, dest->sock, dest->hostname);
         time.packet_sent++;
 
         // RECEIVE
-        char    recvbuf[1500] = {0};
+        int buffer_size = 4096;  // Taille du buffer de réception
+        if (setsockopt(dest->sock, SOL_SOCKET, SO_RCVBUF, &buffer_size, sizeof(buffer_size)) < 0)
+            Error_exit(ERROR_SOCKET, dest->sock, dest->hostname);
+
+        char    recvbuf[buffer_size];
 
         struct  sockaddr_in src;
         ssize_t recvd = receive_packet(dest->sock, recvbuf, 1500, &src);
@@ -164,11 +168,11 @@ void    sendPing(t_ping *dest, char *arg)
         // ECHO REPLY
         handle_reply(recvbuf, recvd, pid16, dest, &time);
 
-        usleep(PING_SLEEP);
 
         time.time[time.seq] = time.packet_time_diff;
         time.seq++;
         
+
     }
 
     close(dest->sock);

@@ -1,4 +1,4 @@
-#include "../include/ping.h"
+#include "ft_ping.h"
 
 void    help() 
 {

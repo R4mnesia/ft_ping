@@ -1,4 +1,4 @@
-#include "../include/ping.h"
+#include "ft_ping.h"
 
 int sig = 0;
 void freeDest(t_ping *dest)

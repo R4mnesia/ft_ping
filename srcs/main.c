@@ -1,4 +1,4 @@
-#include "../include/ping.h"
+#include "ft_ping.h"
 
 // Free hostname on sigint handler
 static t_ping *ptr_dest = NULL;

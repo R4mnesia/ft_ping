@@ -1,4 +1,4 @@
-#include "../include/ping.h"
+#include "ft_ping.h"
 
 void    resolve_hostname(t_ping *dest, const char *hostname, struct sockaddr_in *addr_dest)
 {
